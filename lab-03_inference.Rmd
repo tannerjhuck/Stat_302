@@ -1,0 +1,112 @@
+---
+title: "Lab 3"
+author: "Tanner Huck"
+date: "5/4/2022"
+Collaborated with: "Xiangyi Wen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1. t-test (10 points)
+ Function: t-test
+ Input: x, a numeric vector
+        alternative, character string of alternative hypothesis
+        mu, a number indicating null hypothesis value of mean
+ Outputs: test_stat, numeric test statistic
+          df, degrees of freedom
+          alternative, value of parameter alternative
+          p_val, the numeric p-value
+```{r t-test function}
+my_t.test <- function(x, alternative, mu) {
+  # Check if parameter alternative is of the right form
+  if (!(alternative == "two.sided" || "less" || "greater")) {
+    stop("alternative must be of the form two.sided, less, or greater")
+  }
+  # Calculating the test statistic
+  testStatistic <- (mean(x)-mu)/(sd(x)/sqrt(length(x)))
+  # Calculating the degrees of freedom
+  df <- length(x) - 1
+  # Calculating the p value
+  p_val <- 0
+  if (alternative == "less") {
+    p_val <- pt(testStatistic, df, lower.tail = TRUE, log.p = FALSE)
+  } else if (alternative == "greater") {
+    p_val <- pt(testStatistic, df, lower.tail = FALSE, log.p = FALSE)
+  } else { 
+    p_val <- 2 * pt(abs(testStatistic), df, lower.tail = FALSE, log.p = FALSE)
+  }
+  # Creating a list of the things I want to return
+  my_list <- list(testStatistic,
+                  df,
+                  alternative,
+                  p_val)
+  # Returning values
+  return(my_list)
+}
+```
+
+
+```{r reading in helium data}
+# reading in the helium data set
+helium_data <- read.csv("https://www.openintro.org/data/csv/helium.csv")
+```
+
+```{r testing the t-test function}
+# Comparing the t.test we made a function for compared to the real t.test
+my_t.test(helium_data$helium, "two.sided", 20)
+t.test(helium_data$helium, alternative = "two.sided", mu = 20)
+```
+
+As we can see when we compare the my_t.test function results to a t.test of the same data set, we get about the same answers. 
+
+## Part 2. Linear model (10 points)
+ Function: linear model
+ Input: formula, a class object similar to lm
+        data, data frame
+ Outputs: a table similar to the coefficient table from summary
+```{r linear fit function}
+library(knitr)
+library(kableExtra)
+my_lm <- function(formula, data) {
+  # Finding the coefficients of the linear regression
+  x_matrix <- model.matrix(formula, data)
+  model_frame <- model.frame(formula, data)
+  y_matrix <- model.response(model_frame)
+  lin_reg_coe <- solve(t(x_matrix)%*%(x_matrix))%*%t(x_matrix)%*%y_matrix
+  # Finding the degrees of freedom
+  df <- nrow(data) - 2
+  # Estimating sigma squared
+  sigma_squared <- sum((y_matrix-(x_matrix%*%lin_reg_coe))^2/df)
+  # Estimating the standard error
+  standard_error <- sqrt(diag(sigma_squared*solve(t(x_matrix)%*%(x_matrix))))
+  # Calculating the t value
+  t_val <- lin_reg_coe/standard_error
+  # Calculating the p alues
+  p_val_grade <- 2 * pt(abs(t_val), df, lower.tail = FALSE, log.p = FALSE)
+  # Making the table that the function will return
+  table_values <- cbind(lin_reg_coe, standard_error, t_val, p_val_grade)
+  table <- kable(table_values, col.names = c("Estimate", "Std. Error", "t-value", "p-value"))
+  return(table)
+}
+```
+
+```{r reading in Duke data}
+# reading in the Duke data set
+grades_data <- read.csv("https://www.openintro.org/data/csv/gpa.csv")
+```
+
+```{r testing the linear model}
+true_lm <- lm(gpa ~ studyweek, data = grades_data)
+summary(true_lm)
+my_lm(gpa ~ studyweek, grades_data)
+```
+
+As we can see when we compare the my_lm() function results to lm() of the same data set, we get the same coefficients (besides one of the p values being zero because of a very very small value). 
+
+
+
+
+

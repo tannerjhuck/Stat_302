@@ -1,0 +1,311 @@
+---
+title: "Lab 4"
+author: "Tanner Huck"
+date: "5-25-2022"
+Collaborated with: "Xiangyi Wen"
+output: html_document
+---
+
+<!--- Begin styling code. --->
+<style type="text/css">
+/* Whole document: */
+body{
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: 12pt;
+}
+h1.title {
+  font-size: 38px;
+  text-align: center;
+}
+h4.author {
+  font-size: 18px;
+  text-align: center;
+}
+h4.date {
+  font-size: 18px;
+  text-align: center;
+}
+</style>
+<!--- End styling code. --->
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggpubr)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(class)
+```
+
+
+## Part 1. Training and Test Error (10 points)
+
+Use the following code to generate data:
+
+```{r, message = FALSE}
+library(ggplot2)
+# generate data
+set.seed(302)
+n <- 30
+x <- sort(runif(n, -3, 3))
+y <- 2*x^2 + 2*rnorm(n)
+x_test <- sort(runif(n, -3, 3))
+y_test <- 2*x_test^2 + 2*rnorm(n)
+df_train <- data.frame("x" = x, "y" = y)
+df_test <- data.frame("x" = x_test, "y" = y_test)
+
+# store a theme
+my_theme <- theme_bw(base_size = 16) + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5))
+
+# generate plots
+g_train <- ggplot(df_train, aes(x = x, y = y)) + geom_point() +
+  xlim(-3, 3) + ylim(min(y, y_test), max(y, y_test)) + 
+  labs(title = "Training Data") + my_theme
+g_test <- ggplot(df_test, aes(x = x, y = y)) + geom_point() +
+  xlim(-3, 3) + ylim(min(y, y_test), max(y, y_test)) + 
+  labs(title = "Test Data") + my_theme
+g_train
+g_test
+```
+
+**1a.** For every k in between 1 and 10, fit a degree-k polynomial linear regression model with `y` as the response and `x` as the explanatory variable(s).
+(*Hint: Use *`poly()`*, as in the lecture slides.*)
+
+```{r degree-k polynmial}
+# using poly() to create polynomials of linear regression
+# using a for loop to create the first 10 degree polynomials
+list <- vector('list', 10)
+for (i in 1:10) {
+  polynomial <- sprintf("y ~ poly(x,%d)", i)
+  list[[i]] <- lm(as.formula(polynomial), data = df_train)
+  list[[i]]$call <- parse(text = polynomial)[[1]]
+  assign(paste("lm_fit_", i, sep = ""), list[[i]])
+}
+```
+
+**1b.** For each model from (a), record the training error. Then predict `y_test` using `x_test` and also record the test error.
+(*Hint: You can either do this part by copying your code 10 times for each value of k (which is totally fine!), or in a loop (if you are struggling to call your model within a loop check out the functions get() and paste0()*)
+
+```{r training and test error}
+# Calculating the training value and error for each of the polynomials and then predicting the y_test using x_test and test error
+# degree 1 polynomial
+yhat_train_1 <- predict(lm_fit_1)
+train_err_1 <- mean((df_train$y - yhat_train_1)^2)
+yhat_test_1 <- predict(lm_fit_1, data.frame(x = df_test$x))
+test_err_1 <- mean((df_test$y - yhat_test_1)^2)
+# degree 2 polynomial
+yhat_train_2 <- predict(lm_fit_2)
+train_err_2 <- mean((df_train$y - yhat_train_2)^2)
+yhat_test_2 <- predict(lm_fit_2, data.frame(x = df_test$x))
+test_err_2 <- mean((df_test$y - yhat_test_2)^2)
+# degree 3 polynomial
+yhat_train_3 <- predict(lm_fit_3)
+train_err_3 <- mean((df_train$y - yhat_train_3)^2)
+yhat_test_3 <- predict(lm_fit_3, data.frame(x = df_test$x))
+test_err_3 <- mean((df_test$y - yhat_test_3)^2)
+# degree 4 polynomial
+yhat_train_4 <- predict(lm_fit_4)
+train_err_4 <- mean((df_train$y - yhat_train_4)^2)
+yhat_test_4 <- predict(lm_fit_4, data.frame(x = df_test$x))
+test_err_4 <- mean((df_test$y - yhat_test_4)^2)
+# degree 5 polynomial
+yhat_train_5 <- predict(lm_fit_5)
+train_err_5 <- mean((df_train$y - yhat_train_5)^2)
+yhat_test_5 <- predict(lm_fit_5, data.frame(x = df_test$x))
+test_err_5 <- mean((df_test$y - yhat_test_5)^2)
+# degree 6 polynomial
+yhat_train_6 <- predict(lm_fit_6)
+train_err_6 <- mean((df_train$y - yhat_train_6)^2)
+yhat_test_6 <- predict(lm_fit_6, data.frame(x = df_test$x))
+test_err_6 <- mean((df_test$y - yhat_test_6)^2)
+# degree 7 polynomial
+yhat_train_7 <- predict(lm_fit_7)
+train_err_7 <- mean((df_train$y - yhat_train_7)^2)
+yhat_test_7 <- predict(lm_fit_7, data.frame(x = df_test$x))
+test_err_7 <- mean((df_test$y - yhat_test_7)^2)
+# degree 8 polynomial
+yhat_train_8 <- predict(lm_fit_8)
+train_err_8 <- mean((df_train$y - yhat_train_8)^2)
+yhat_test_8 <- predict(lm_fit_8, data.frame(x = df_test$x))
+test_err_8 <- mean((df_test$y - yhat_test_8)^2)
+# degree 9 polynomial
+yhat_train_9 <- predict(lm_fit_9)
+train_err_9 <- mean((df_train$y - yhat_train_9)^2)
+yhat_test_9 <- predict(lm_fit_9, data.frame(x = df_test$x))
+test_err_9 <- mean((df_test$y - yhat_test_9)^2)
+# degree 10 polynomial
+yhat_train_10 <- predict(lm_fit_10)
+train_err_10 <- mean((df_train$y - yhat_train_10)^2)
+yhat_test_10 <- predict(lm_fit_10, data.frame(x = df_test$x))
+test_err_10 <- mean((df_test$y - yhat_test_10)^2)
+```
+
+**1c.** Present the 10 values for both training error and test error on a single table. Comment on what you notice about the relative magnitudes of training and test error, as well as the trends in both types of error as $k$ increases.
+
+```{r table of error}
+# creating a vector of all the training error values
+train_err <- c(train_err_1, train_err_2, train_err_3,  train_err_4, 
+                 train_err_5, train_err_6, train_err_7, train_err_8, 
+                 train_err_9, train_err_10)
+# creating a vector of all the test error values
+test_err <- c(test_err_1, test_err_2, test_err_3, test_err_4,
+              test_err_5, test_err_6, test_err_7, test_err_8,
+              test_err_9, test_err_10)
+# vector of 1-10
+nums <- c(1:10)
+# Creating a table of all the error values
+table_values <- cbind(nums, train_err, test_err)
+table <- kable(table_values, col.names = c("Degree Polynomial (k)", 
+                                           "Training error", "Test Error"))
+table
+```
+For the test error, the highest error is when k=1. Then for k=2 the error decreases drastically. Then for k values of 2-9 the magnitude of test error jumps around a bit but mostly increases steadily and slowly. Then from k=9 to 8, the test error decrease slightly.
+For the training error, again, the highest error is when k=1 and when k=2 the error decreases drastically. Then for k=2 thought k=10, the error slowly and steadily decreases.
+
+**1d.** If you were going to choose a model based on training error, which would you choose? Plot the data, colored by split (training or test split). Add a line to the plot representing your selection for model fit. Add a subtitle to this plot with the (rounded!) test error.
+(*Hint: See Lecture Slides 8 for example code.*)
+
+```{r plot of best for training error}
+# combining all the data together and separating it by the type of error
+all_data <- rbind(df_train, df_test) %>% mutate(Type_error = 
+                              as.factor(c(rep("Train", 30), rep("Test",30))))
+# creating a graph for the data, colored by the type of error
+g_split <- ggplot(all_data, aes(x = x, y = y, color = Type_error)) + geom_point() +
+  labs(title = "Degree 10 Fit") + my_theme
+# Create smooth line for plotting for the 10th degree fit
+x_fit <- data.frame(x = seq(min(all_data$x), max(all_data$x), length = 100))
+line_fit_10 <- data.frame(x = x_fit, y = predict(lm_fit_10, newdata = x_fit))
+# graphing the 10th degree fit onto the same graph as the data with a subtitle of the test error for the fit
+graph <- g_split + 
+  labs(subtitle = paste("Test error:", round(test_err_10, 2))) +
+  geom_line(data = line_fit_10, aes(y = y, x = x), col = "red", lwd = 1.5)
+graph
+```
+
+If I had to choose a model based on training error, I would choose the 10th degree model, because it has the least training error.
+
+**1e.** If you were going to choose a model based on test error, which would you choose? Plot the data, colored by split. Add a line to the plot representing your selection for model fit. Add a subtitle to this plot with the (rounded!) test error.
+
+```{r plot of best for test error}
+# creating a graph for the data, colored by the type of error
+g_split <- ggplot(all_data, aes(x = x, y = y, color = Type_error)) + geom_point() +
+  labs(title = "Degree 3 Fit") + my_theme
+# Create smooth line for plotting for the 10th degree fit
+x_fit <- data.frame(x = seq(min(all_data$x), max(all_data$x), length = 100))
+line_fit_3 <- data.frame(x = x_fit, y = predict(lm_fit_3, newdata = x_fit))
+# graphing the 10th degree fit onto the same graph as the data with a subtitle of the test error for the fit
+graph2 <- g_split + 
+  labs(subtitle = paste("Test error:", round(test_err_3, 2))) +
+  geom_line(data = line_fit_3, aes(y = y, x = x), col = "red", lwd = 1.5)
+graph2
+```
+
+If I had to choose a model based on test error, I would choose the 3rd degree model, because it has the least test error.
+
+**1f.** What do you notice about the shape of the curves from part (d) and (e)? Which is more flexible? Why should we trust our test error more than our training error in this context?
+
+The curve in part d has many peaks and turns in it whereas the curve in part e only has 1 peak in it. This might be due to the degree 10 fit over fitting. The degree 10 polynomial is much more flexible than the degree 3 polynomial. In this context we should trust our test error more than our training error because the goal of spiting our data is to make predictions. To do this we want to be minimizing our test error.
+
+## Part 2. k-Nearest Neighbors Cross-Validation (10 points)
+
+```{r penguin data}
+# loading in everything needed for the penguin data
+library(palmerpenguins)
+data("penguins")
+peng_clean <- penguins %>% 
+  mutate(any_nas = is.na(bill_length_mm) | is.na(bill_depth_mm) | 
+           is.na(flipper_length_mm) | is.na(body_mass_g)) %>%
+  filter(!any_nas)
+```
+
+Function: my_knn_cv : predict output class species
+Input: train: input data frame
+       cl: true class value of your training data
+       k_nn: integer representing the number of neighbors
+       k_cv: integer representing the number of folds
+Outputs: class: a vector of the predicted class Y^i for all observations
+         cv_err: a numeric with the cross-validation misclassification error
+```{r predict species}
+# Creating a function to predict the test using the train
+my_knn_cv <- function(train, cl, k_nn, k_cv) {
+  # variable k for the number of folds we will use in Cross-validation
+  k <- k_cv
+  # variable fold that will randomly assigns observations from our data into different folds with equal probability
+  fold <- sample(rep(1:k, length = nrow(train)))
+  # new data with a new col with the index number
+  train_new <- train %>% mutate(index = (1:nrow(train)), "split" = fold)
+  # creating a matrix to hold the predicted classes
+  class <- matrix(NA, nrow = 1, ncol = nrow(train))
+  # creating a variable for the error
+  cv_error <- vector(length = k)
+  # using a for loop that will iterate equal to the number of folds and predict the class 
+  for (i in 1:k) {
+    # assigning folds to be either the training or test data for each iteration of the for loop
+    data_train <- train_new %>% filter(split != i)
+    data_test <- train_new %>% filter(split == i)
+    # the true values
+    key_train <- data_train$index
+    key_test <- data_test$index
+    # uses the knn function to predict the class of the test fold by using all other folds as the training data
+    class[key_test] <- as.character(knn(data_train, data_test, cl[key_train],k_nn))
+    # testing to see if the predicted class is the true class (1 if not correct, 0 if correct) and putting it in a vector cv_error
+    error <- (!class[key_test] == as.character(cl[key_test]))
+    cv_error[i] <- mean(error)
+  }
+  # returning a list of the predicted class and the average misclassifications rate (find average by using mean)
+  return(list(class, mean(cv_error)))
+}
+```
+
+```{r testing function}
+# This will predict the species of a penguin by using using covariates bill_length_mm, bill_depth_mm, flipper_length_mm, and body_mass_g and 5 fold cross validation. I will test it twice, once using 1-nearest neighbor and once for 5-nearest neighbors.
+species_prediction_1nn <- my_knn_cv(subset(peng_clean, select = c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")), peng_clean$species, 1, 5)
+species_prediction_5nn <- my_knn_cv(subset(peng_clean, select = c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")), peng_clean$species, 5, 5)
+```
+
+```{r table}
+# finding the training set error for each 
+class1 <- unlist(species_prediction_1nn[1])
+class5 <- unlist(species_prediction_5nn[1])
+diff_1 <- c(NA, 342)
+diff_5 <- c(NA, 342)
+for (i in 1:342) {
+  diff_1[i] <- (!class1[i] == as.character(penguins$species[i]))
+  diff_5[i] <- (!class5[i] == as.character(penguins$species[i]))
+}
+diff_1 <- mean(diff_1)
+diff_5 <- mean(diff_5)
+# using a table to show the average misclassifications rate and the training set error values for the 1-nearest neighbor and 5-nearest neighbors.
+type_err <- c("cross-validation misclassification error", "training set error")
+type_err_1 <- c(species_prediction_1nn[2], diff_1)
+type_err_5 <- c(species_prediction_5nn[2], diff_5)
+table_values <- cbind(type_err, type_err_1, type_err_5)
+table <- kable(table_values, col.names = c("Type of Error", "1-nearest neighbor", "5-nearest neighbors"))
+table
+```
+
+From our results and from the table, we can see that the 1-nearest neighbor had less cross-validation misclassification error and lower training set error. Based on this analysis I would choose the 1-nearest neighbor model. This is because when you are predicting the species of penguins using nearest neighbors, using fewer nearest neighbors will give you less error. Because if you choose 1-nearest neighbor, the nearest neighbor would be you, meaning training set error for 1-nearest neighbor should be 0.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

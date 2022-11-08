@@ -1,0 +1,91 @@
+---
+title: "STAT302TakeAways Tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{STAT302TakeAways Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include = FALSE}
+library(STAT302TakeAways)
+library(dplyr)
+library(knitr)
+```
+
+```{r cleaning penguins data, include = FALSE}
+#> cleaning the penguins data set so we can use it in the tutorials
+peng_clean <- my_penguins %>% 
+  mutate(any_nas = is.na(bill_length_mm) | is.na(bill_depth_mm) | 
+           is.na(flipper_length_mm) | is.na(body_mass_g)) %>%
+  dplyr::filter(!any_nas)
+```
+
+### Tanner Huck and Xiangyi Wen
+
+This R package provides three functions that were created throughout Stat 302. The first function my_t.test will perform a one sample t-test. The my_lm function can fit a linear model to data. The final function my_knn_cv predicts output classes using covariates through cross validation. Below is a more complete tutorial of each function can be used by using the my_penguins data set.
+
+## my_t.test()
+
+The my_t.test() function will perform a one sample t-test in R. One example hypothesis we could test using the my_penguins data set is that the mean body mass of penguins is different than the true mean body mass of a penguin, 4207 grams. The null hypothesis is that there is no difference in the mean body mass of the penguins and the true mean body mass of a penguin, and the alternative hypothesis is that there is a difference between these masses. For this hypothesis test we want to do a two-sided t-test. To do this we can call the my_t.test() function and input the data we are testing, a string "two.sided," and the null hypothesis value of the mean (4207).
+
+```{r my_t.test function}
+#> Using the my_t.test function to do a two-sided t.test on the hypothesis mean body mass of penguins is different than the true mean body mass of a penguin with the peng_clean data
+results_t.test <- my_t.test(peng_clean$body_mass_g, "two.sided", 4207)
+results_t.test
+```
+
+This will return a list of four things: `r results_t.test`. These outputs represent the test statistic, degrees of freedom, alternative hypothesis, and the p-value respectively. The p-vlaue we saw for this hypothesis test was `r results_t.test[4]`. Because the p-vlaue is greater than 0.05, this tells us that we do not have enough evidence to reject the null hypothesis, that there is no difference in the mean body mass of the penguins and the true mean body mass of a penguin.
+
+## my_lm()
+
+The my_lm() function will fit a linear model in R. We can take our data and regress a dependent variable upon a independent variable. To do this with our peng_clean data, we need to choose which variables to use. Suppose that we want to regress the variable flipper_length_mm upon body_mass_g. This is asking, what is the relationship between flipper length and body mass. The code would look something like this...
+
+```{r my_lm function}
+#> Using the my_lm function to do fit a linear model of flipper length upon body mass with the peng_clean data
+results_lm <- my_lm(flipper_length_mm ~ body_mass_g, peng_clean)
+results_lm
+```
+
+This will return the table shown above. This table will have two rows and four columns that represent the coefficients of our linear model. The rows are for the intercept and the independent variable, and the columns are for the Estimate, Std. Error, t-value, and p-value. These coefficients represent the expected difference in the response between two observations, differing by one unit, in with all other covariates are identical. In our case, when the independent variable of body mass increases by 1, what can we expect to happen to flipper length. Looking at the table, we can see that this coefficient is about 0.015, meaning that when body mass increases by 1, what can we expect flipper length to increase by a factor of about 0.015.
+
+Additionally, for each coefficient, we test the null hypothesis that there is no linear relationship between predictor and the outcome. In our case, the null hypothesis is that there is no linear relationship between flipper length and body mass. The Std. Error coefficient represents the error or noise, and the t-value and p-value coefficients represents the t-value and p-value of this hypothesis test. In our case we are getting a p-value that is really really close to 0. Because we are getting a p-value less than 0.05, this tells us that we do have enough evidence to reject the null hypothesis, meaning that there is a linear relationship between flipper length and body mass.
+
+## my_knn_cv()
+
+The my_knn_cv function will predict an output class using covariates using cross-validation and k nearest neighbors. An example of this with our peng_clean data would be predicting the output class species using covariates bill_length_mm, bill_depth_mm, flipper_length_mm, and body_mass_g. 
+
+```{r my_knn_cv function}
+#> Using the my_knn_cv function to predict output class species using covariates bill_length_mm, bill_depth_mm, flipper_length_mm, and body_mass_g using 5-fold cross validation and k nearest neighbors with the peng_clean data
+test <- vector('list', 10)
+for (i in 1:10) {
+  test[[i]] <- my_knn_cv(subset(peng_clean, 
+                                select = c(bill_length_mm, bill_depth_mm,
+                                           flipper_length_mm, body_mass_g)),
+                         peng_clean$species, i, 5)
+}
+#> set the data to generate table
+table1 <- rbind(c("k_nn=1", test[[1]][[2]], test[[1]][[3]]), 
+                c("k_nn=2", test[[2]][[2]], test[[2]][[3]]), 
+                c("k_nn=3", test[[3]][[2]], test[[3]][[3]]), 
+                c("k_nn=4", test[[4]][[2]], test[[4]][[3]]), 
+                c("k_nn=5", test[[5]][[2]], test[[5]][[3]]), 
+                c("k_nn=6", test[[6]][[2]], test[[6]][[3]]), 
+                c("k_nn=7", test[[7]][[2]], test[[7]][[3]]), 
+                c("k_nn=8", test[[8]][[2]], test[[8]][[3]]), 
+                c("k_nn=9", test[[9]][[2]], test[[9]][[3]]), 
+                c("k_nn=10", test[[10]][[2]], test[[10]][[3]]))
+#> generate the table
+kable(table1, format = "simple", col.names = c("knn", "cv error", "training set error"))
+```
+
+This will return the table shown above. This table will have a row for each nearest neighbor value and columns for the training misclassification rates and CV misclassification rates.
+
+Based of these errors, we would choose knn = 1 as the best model. This is because when we look at the first nearest neighbor in the table it has both the least training set error and CV error. This means that the knn = 1 model will give us the most accurate predictions.

@@ -1,0 +1,129 @@
+---
+title: "Short Lab 3"
+author: "Tanner Huck"
+date: "4-27-2022"
+output: html_document
+---
+
+<!--- Begin styling code. --->
+<style type="text/css">
+/* Whole document: */
+body{
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: 12pt;
+}
+h1.title {
+  font-size: 38px;
+  text-align: center;
+}
+h4.author {
+  font-size: 18px;
+  text-align: center;
+}
+h4.date {
+  font-size: 18px;
+  text-align: center;
+}
+</style>
+<!--- End styling code. --->
+
+
+As usual, all code below should follow the style guidelines from the lecture slides.
+
+In this short lab, you will analyze data from the [Environmental Performance Index](https://epi.yale.edu/), which ranks 180 countries on 32 variables that describe environmental health and ecosystem vitality. We'll consider a subset of those indicators. See [this technical appendix](https://epi.yale.edu/downloads/epi2020technicalappendix20200803.pdf) (Page 2) for descriptions of the variables. 
+
+The following code will load in the dataset and prepare it to run PCA on. 
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+# load in environmental variables to run PCA on 
+pca_df <- read_csv("https://raw.githubusercontent.com/svteichman/STAT302-WIN2022/main/files/projects/02_dimension_reduction/pca_data.csv")
+pca_indicators <- pca_df %>% select(-country)
+rownames(pca_indicators) <- pca_df$country
+# load in additional data about countries
+other_df <- read_csv("https://raw.githubusercontent.com/svteichman/STAT302-WIN2022/main/files/projects/02_dimension_reduction/additional_data.csv")
+```
+
+## Run PCA 
+
+**1**. Run PCA on `pca_indicators` using the function `princomp()`. Don't worry about scaling the variables because all of the indicators are already on a 0-100 scale. 
+
+```{r using PCA}
+# using the princomp() function with the pca_indicators data
+PCA <- princomp(pca_indicators)
+```
+
+**2**. Make a screeplot of your results from `princomp()` with the function `screeplot()`. What is an appropriate number of principal components to analyze? Why? 
+
+```{r screenplot}
+screeplot(PCA)
+```
+
+# I think we should analyze 2 principle components. This is because when you get past 2 components, the data is less important, or adding very little data. 
+
+**3**. Plot your first two principal components (see slides 34 and 35 of Slides 5). Label between $5$ and $10$ countries. Interpret your results. Which countries have similar environmental indicators? Which countries have different environmental indicators? 
+
+```{r}
+plot_df <- 
+  data.frame(pc1 = PCA$
+               scores[, 1],
+             pc2 = PCA$
+               scores[, 2],
+             name = rownames(pca_indicators))
+ggplot(plot_df, 
+       aes(x = pc1, y = pc2, 
+           label = name)) + 
+  geom_point() + 
+  geom_text(size = 4, 
+            nudge_x = .12, 
+            nudge_y = .12) + 
+  labs(x = "Principal Component 1", 
+       y = "Principal Component 2",
+       title = "First Two Principal Components of mtcars") + 
+  theme_bw(base_size = 12) + 
+  theme(plot.title = 
+          element_text(hjust = 0.5))
+
+text_df <- plot_df %>%
+  filter(name %in%
+           c("Iceland", "Canada",
+             "Greenland", "United States of America",
+             "Australia", "Viet Nam", "Russia"))
+ggplot(plot_df, 
+       aes(x = pc1, y = pc2,
+           label = name)) + 
+  geom_point() + 
+  geom_text(data = text_df,
+            size = 4, 
+            nudge_x = .12, 
+            nudge_y = .12) + 
+  labs(x = "Principal Component 1", 
+       y = "Principal Component 2",
+       title = "First Two Principal Components of mtcars") + 
+  theme_bw(base_size = 12) + 
+  theme(plot.title = 
+          element_text(hjust = 0.5))
+```
+
+# Out of the country that I chose to label, it looks like Canada, Iceland, and the US all have similar environmental indicators. Whereas and example of different environmental indicators would be Viet Nam and Australia.
+
+**4**. Take you plot from (**3**) and color the points by one of the variables in `other_df`. Choose either `region`, `ldc` (which is $1$ for a set of least developed countries and $0$ otherwise), `emmrk` (which is $1$ if the country has an emerging market and $0$ otherwise), or `gdp` (if you choose `gpd` I recommend instead using `log(gdp)` because it is a very right-skewed variable). See slides 39 through 44 of Slides 5 for code inspiration. 
+
+```{r}
+ggplot(plot_df, 
+       aes(x = pc1, y = pc2,
+           label = name,
+           color = as.factor(other_df$region))) +
+  geom_point() + 
+  labs(x = "Principal Component 1", 
+       y = "Principal Component 2",
+       title = "First Two Principal Components of mtcars") + 
+  theme_bw(base_size = 12) + 
+  theme(plot.title = 
+          element_text(hjust = 0.5))
+```
+
+**5**. Describe the relationship between the first principal component and the variable `EPI_cat` in `other_df` (look at numerical and graphical measures of the relationship). `EPI_cat` is a weighted summary of all of the environmental indicators created by the people who built the Environmental Performance Index. Does this relationship make sense to you? Why or why not? 
+
+The first pricncipal componenet is like a summary of the data, and excluding some of the less important data. The `EPI_cat` is doing something similar because it is a weighted summary of the enviromental indicators. I believe that these are similar becasuse they are both trying to summarize the enviromental indicators, and excluding some data is a unique way. However some of the principal component data is negative and all of the `EPI_cat` data is positive, which confuses me.
+

@@ -1,0 +1,72 @@
+---
+title: "Short Lab 5"
+author: "Tanner Huck"
+date: "5-18"
+output: html_document
+---
+
+1. Load the helium dataset using the code below. This dataset contains data from an experiment in which two identical footballs, one air filled with air and one filled with helium, were each kicked 39 times. The distances traveled were
+measured for each trial.
+
+```{r data}
+library(tidyverse)
+# Loading in data
+helium_data <- read.csv("https://www.openintro.org/data/csv/helium.csv")
+```
+
+2. Use the `t.test` function to test the null hypothesis that the mean distance traveled by the helium-filled ball is equal to the mean distance traveled by the air-filled ball. Use a one-sided hypothesis (you think that since balloons filled with helium float better than balloons filled with air that your helium filled football might go further). What do you conclude?
+
+```{r t test}
+# running a t-test on the hypothesis that the mean distance traveled by the helium-filled ball is equal to the mean distance traveled by the air-filled ball
+newData <- helium_data$helium - helium_data$air
+results <- t.test(newData, mu = 0, alternative = "greater")
+```
+
+Because the p-value is `r results$p.value` which is greater than 0.05, this means that we can reject the null hypothesis, meaning that the mean distance traveled by the helium-filled ball will go farther.
+
+3. Write code to run a permutation test to test the same hypothesis as above. Your permutation test should follow these steps:
+    a. Compute a test statistic using the original unpermuted data.
+    b. Permute data by randomly splitting the 78 observations into two groups and compute a test statistic comparing the two groups.
+    c. Repeat the above step 1000 times, recording your test statistic each time.
+    d. Compare your test statistic from the original unpermuted data with your distribution of test statistics based on the repeatedly permuted data to compute a p-value. Include a histogram of permuted test statistics and a p-value from your permutation test. 
+
+Hint: you will probably want to tidy your data in order to permute more easily, `pivot_longer()` is your friend here! 
+
+Hint: make sure that when you compute your p-value you consider which tail you want! 
+
+```{r tidying data}
+# Tidying the data to permute it more easily later
+# Changing the second and third cols to hype of air and the value 
+new_data <- pivot_longer(helium_data, c(2,3), names_to = "Type")
+```
+
+```{r permutation test}
+# the test statistic of the original data
+test_statistic <- results$statistic
+
+# for loop to run permutation tests 1000 times and get the test statistic each time
+test_statistics <- c(1:1000)
+for (i in 1:1000) {
+  permuted_data <- new_data %>%
+    mutate(value = sample(value))
+  diff <- (permuted_data$value[permuted_data$Type == "helium"]) -       (permuted_data$value[permuted_data$Type == "air"])
+  test_statistics[i] <- t.test(diff, mu = 0, alternative = "greater")$statistic
+}
+
+# for to loop to calculate how many of the test statistics are greater than the true test statistic
+sum <- 0
+for (j in 1:length(test_statistics)) {
+  if (test_statistics[j] >= test_statistic || test_statistics[j] <= -test_statistic) {
+    sum <- sum + 1
+  }
+}
+# Calculating the p value of the test statistics
+p_val <- sum / length(test_statistics)
+
+# histogram of the test statistics
+hist(test_statistics)
+```
+
+4. What is your conclusion from the permutation test? Does it match your conclusion from your t-test? 
+
+In our permutation test we got a p value of `r p_val` which was greater than our original p value. This still shows us that we can see a difference between the difference in mean of the different balloon types; the conclusion of the permutation test is the same as the t-test.

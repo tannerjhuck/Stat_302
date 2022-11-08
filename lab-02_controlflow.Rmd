@@ -1,0 +1,204 @@
+---
+title: "Lab 2"
+author: "Tanner Huck"
+date: "4/13/22"
+output: html_document
+---
+
+<!--- Begin styling code. --->
+<style type="text/css">
+/* Whole document: */
+body{
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: 12pt;
+}
+h1.title {
+  font-size: 38px;
+  text-align: center;
+}
+h4.author {
+  font-size: 18px;
+  text-align: center;
+}
+h4.date {
+  font-size: 18px;
+  text-align: center;
+}
+</style>
+<!--- End styling code. --->
+
+### Collaborators
+
+Xiangyi Wen
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*If you collaborated with anyone, you must include "Collaborated with: FIRSTNAME LASTNAME" at the top of your lab!*
+
+As usual, all code below should follow the style guidelines from the lecture slides.
+
+## Part 1. Control Flow (4 points)
+
+**1a.** (2 points) Write a function that checks whether the input is an even number or not. This function should check to make sure the input is an integer. If the input is not an integer, the function should `stop` with an informative error message.
+
+```{r function to check if a number is even}
+# Assign a number to x before running
+evenOrOdd <- function(x) {
+  if (is.numeric(x) && (x %% 1) == 0) { #Testing if x is a integer
+    if((x %% 2) == 0) {
+      print("This is an even number") # If x an integer and is divisible by 2 it will print this
+    } else {
+      print("This is an odd number") # If x is an integer and not divisible by 2 it will print this
+    }
+  } else {
+    print("error, this is not an integer") # If not an integer it will print this
+  }
+}
+```
+
+**1b.** (1/2 point) Evaluate your function with even integer input.
+
+*Hint: in R, if you assign a variable to any number, such as `x <- 4`, R will save this variable as a double. In order to make it an integer type, use the integer number you want followed by an L, such as `x <- 4L`.* 
+
+```{r checking function with even}
+# Checking to see if the function works with even integer inputs
+evenOrOdd(42);
+```
+
+As we can see, this when we give x the value of 42, the loop will print out "This is an even number."  
+
+**1c.** (1/2 point) Evaluate your function with odd numeric input.
+
+```{r checking function with odd}
+# Checking to see if the function works with odd integer inputs
+evenOrOdd(43);
+```
+As we can see, this when we give x the value of 43, the loop will print out "This is an odd number." 
+
+**1d.** (1 point) Trigger your custom error message. Note: You will need to add the parameter `error = TRUE` to your R Markdown code chunk. If you do not, your document will not compile! To do this, replace ```{r}``` with ```{r, error = TRUE}```. 
+
+```{r checking function with non-integer}
+# Checking to see if the function works with non integer inputs
+evenOrOdd("Hello There");
+```
+As we can see, this when we assign x "hello there," the loop will print out "error, this is not an integer."
+
+## Part 2. Loops (4 points)
+
+**2.** (4 points) Define a function that loops through each element of a matrix and replaces each element with the row index minus the column index. Create a matrix and demonstrate the use of this function on your matrix.
+
+*Hint: use the functions `ncol()` and `nrow()` to find the number of columns and number of rows in your matrix input.*
+
+```{r function with loops}
+# Defining a function matrixEditer that loops though a matrices rows and than 
+# columns and replaces elements with the row index subtract the col index
+matrixEditer <- function(x) {
+  for (i in 1:nrow(x)) {
+    for (j in 1:ncol(x)) {
+      x[i, j] <- i - j
+    }
+  }
+  return(x)
+}
+
+# Testing the function matrixEditer with an empty 10 by 4 matrix we used in the last lab
+tenByFourMatrix <- matrix(NA, nrow = 10, ncol = 4)
+testMatrix <- matrixEditer(tenByFourMatrix)
+```
+
+As we can see, when we run an empty 10 by 4 matrix through the function martixEditor, it returns the correct matrix where every element is the row number minus the column number.
+
+## Part 3. More on Functions (8 points)
+
+**3a.** (3 points) The hard-threshold function is defined as 
+$$f_\lambda(x) = \begin{cases} x & |x| \geq \lambda\\ 0 & |x| < \lambda \end{cases}$$
+Write an R function that takes two parameters, numeric vector input `x` and a threshold `lambda`.
+Your function should return the value of $f_\lambda(x)$ and work for vector input `x` of any length.
+Remember to follow the style guide for functions (see Lecture 2 for specifics).
+
+```{r hard-threshold function}
+# Function: hard-threshold function
+# Inputs: a numeric vector x and a threshold lambda
+# Outputs: x if the absolute value of x is equal to or greater than lambda and 0 if x is less than lambda, replacing the elements in x with the new ouputs
+hardThreshold <- function(x, lambda) {
+  for (i in 1:length(x)) {
+    if (abs(x[i]) < lambda) {
+      x[i] <- 0
+    }  
+  }
+  return(x)
+}
+```
+
+
+**3b.** (1 point) Set $\lambda = 4$, demonstrate your function on the vector `c(-5, -3, 0, 3, 5)`.
+
+(*Hint: the output should be the vector `-5, 0, 0, 0, 5`*)
+
+```{r using the hard-threshold function}
+# Testing the hardThreshold function we made in 3a
+testVector <- hardThreshold(c(-5, -3, 0, 3, 5), 4)
+```
+
+As we can see, when we input a vector of [-5, -3, 0, 3, 5], the function will return the vector [-5, 0, 0, 0, 5], replacing all the elements less than 4 with 0. 
+
+
+**4a.** (3 points) The soft-threshold function is defined as 
+$$g_\lambda(x) = \begin{cases} sign(x)(|x| - \lambda) & |x| \geq \lambda\\ 0 & |x| < \lambda \end{cases}$$
+Write an R function that takes two parameters, numeric vector input `x` and a threshold `lambda`.
+Here, `sign(x)` should return $1$ if `x` is positive or $0$ and should return $-1$ if `x` is negative. 
+Your function should return the value of $g_\lambda(x)$ and work for vector input `x` of any length.
+
+```{r soft-threshold function}
+# Function: soft-threshold function
+# Inputs: a numeric vector x and a threshold lambda
+# Outputs: will output a vector with the new replaced values, 1 if x is positive or 0 and -1 if x is negative
+softThreshold <- function(x, lambda) {
+  for (i in 1:length(x)) {
+    if (abs(x[i]) < lambda) {
+      x[i] <- 0
+    } else if (x[i] > 0) {
+      x[i] <- 1
+    } else {
+      x[i] <- -1
+    }
+  }
+  return(x)
+}
+```
+
+**4b.** (1 point) Set $\lambda = 4$, demonstrate your function on the vector `c(-5, -3, 0, 3, 5)`.
+
+(*Hint: the output should be the vector `-1, 0, 0, 0, 1`*)
+
+```{r using the soft-threshold function}
+# Testing the softThreshold function we made in 4a
+softTestVector <- softThreshold(c(-5, -3, 0, 3, 5), 4)
+```
+
+As we can see, when we input a vector of [-5, -3, 0, 3, 5], the function will return the vector [-1, 0, 0, 0, 1]. It replaces all the elements with absolute value less than lambda with 0, then of the remaining elements replacies the positive ones with 1 and negative ones with -1.
+\
+
+## Part 4. Lists (4 points)
+
+Many popular functions in R output lists in order to return multiple objects of different types and lengths. Here we will look at the function `lm`, which performs linear regression. 
+
+First, run the following code to create an object of class `lm`.
+
+```{r}
+linearMod <- lm(dist ~ speed, data = cars) 
+```
+
+**5a.** (1 point) What are the names of the items in the list `linearMod`?
+```{r names}
+names(linearMod)
+```
+
+**5b.** (3 points) Store the `coefficients` within `linearMod` as a new variable. What are the coefficients and their interpretations? (Use in-line R code when referencing the coefficients outside of the code chunk).
+```{r coefficients}
+coefficients <- linearMod$coefficients
+```
+
+When the speed is equal to 0, the distance is -17.58, similar to a starting distance. The coefficent 3.93 represents the increase in distance when speed increases.

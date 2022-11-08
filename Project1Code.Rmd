@@ -1,0 +1,285 @@
+---
+title: "Project 1: Data Exploration and Visualization"
+author: "Tanner Huck and Xiangyi Wen"
+date: "Due on 04/25"
+output: html_document
+---
+
+```{r read_in_data, echo = FALSE, eval = TRUE}
+# downloading the data
+permit <- read.csv("https://raw.githubusercontent.com/svteichman/STAT302-SPR2022/main/files/projects/01_data-visualization/Building_Permits_Clean.csv")
+```
+
+```{r load_package, echo = FALSE, eval = TRUE, message = FALSE}
+# attach tidyverse packages 
+library(tidyverse)
+```
+
+# Introduction
+When looking at the building permits for the City of Seattle from 2017 to 2021, we were very interested in how the COVID-19 pandemic affected the price for building projects with different perspective. We are interested in this topic because COVID-19 has played such a major roles in our lives in the last couple of years. It has certainly made our personal lives more expensive, we are curious to see if it made building projects more expensive as well. To start exploring this topic, our main area of focus has been the the estimated building costs from the years of 2019 through 2021, when the pandemic started in comparison to the recent data. We also focused on neighborhood district, to see which neighborhood districts were affected the most. Later on, we also acknowledge permit classes and see how they contribute to these building costs.
+
+```{r histogram, echo = FALSE, eval = TRUE, warning = FALSE}
+# Creating a plot with log of the estimated price costs on the x axis
+ggplot(permit, aes(x = log(EstProjectCost))) +
+  # Creating a histogram with bins of 40
+  geom_histogram(bins = 40) +
+  # Creating a labels for the histogram
+  labs(title = "Estimated Project Costs (log)",
+       x = "the log of Estimated Price Costs")
+```
+
+To gain an initial understanding of the estimated price costs, we first looked at a general histogram of these costs. At first, we noticed that majority of the data was right skewed and it was hard to understand what the data was showing. Then we changed the histogram to the log of these costs and the histogram was much more unimodal. The data was evenly distributed, centered around 11 or 12, and had a few outliers on the left side. This histogram was important because based on the histogram, we thought that the estimated price costs for 2017 through 2021 are relatively similar. Right away, this shows us that there might not be a large difference between the costs in 2019 compared to 2021. Maybe COID-19 did not have as big of an effect on building projects as we initially thought. 
+
+```{r line_graph, echo = FALSE, eval = TRUE}
+# Supress the summary message when knitted
+options(dplyr.summarise.inform = FALSE)
+# Creating a subset of data that groups by neighborhood district and issued year
+# Takes a sum of all the estimated project costs of a given neighborhood and year
+projCost <- permit %>%
+  group_by(NeighborhoodDistrict, IssuedYear) %>%
+  summarise(AveCost = mean(EstProjectCost, na.rm = TRUE), totalCost = sum(EstProjectCost, na.rm = TRUE))
+projCost$NeighborhoodDistrict <- as.factor(projCost$NeighborhoodDistrict)
+# Creates a graph for the average costs grouped by neighborhood compared to the issued year
+ggplot(data = projCost, aes(x = IssuedYear, y = AveCost, group = NeighborhoodDistrict, color = NeighborhoodDistrict)) + 
+  # Creates a line graph
+  geom_line(size = 0.5) + 
+  # Creates the labels for the graph
+  labs(title = "Estimated average project cost by year per neighborhood district",
+       x = "Year Issued",
+       y = "Average Estimated Project Cost (dollars)")
+ggplot(data = projCost, aes(x = IssuedYear, y = totalCost, group = NeighborhoodDistrict, color = NeighborhoodDistrict)) + 
+  # Creates a line graph
+  geom_line(size = 0.5) + 
+  # Creates the labels for the graph
+  labs(title = "Estimated total project cost by year per neighborhood district",
+       x = "Year Issued",
+       y = "Total Estimated Project Cost (dollars)")
+```
+
+The next thing that we wanted to examine was how the estimated price costs changed over time. We calculated the average price cost and the total cost for each neighborhood in during each year and graphed it in two line graphs. The most important thing that we were looking for was how these prices changed at the start of the pandemic in 2020. If we look at 2020 in the graphs, we can see that there are a few huge decrease down in 2020 ,and most of the neighborhood costs has increased in 2021. As we can see from the graph, both the total and average costs went down at the beginning of 2020. We thought that if the average price to build a project went down, then more people would have been interested in building things, however, this is not what happened. This proved our initial hypothesis of the impact of COVID-19. Now that we know that there was a change in price due to the pandemic, we want to then review this change more closely.
+
+```{r first_bar_graph, echo = FALSE, eval = TRUE}
+# Creates a function that will return a bar chart given an input of any year
+plotProjCostYear <- function(year) {
+  # Filters the data for the given year
+  projCostYear <- projCost %>% filter(IssuedYear == year)
+  # Returns a plot of the total costs based on neighborhoods
+  return(ggplot(data = projCostYear, aes(x = NeighborhoodDistrict, y = totalCost)) +
+  # Creates a bar graph
+  geom_bar(stat = "identity") + 
+  geom_smooth(formula = y ~ x,
+              se = FALSE, size = 2, color = "red", method = "loess") +
+  # creates labels for the graph
+  labs(title = paste0("Total project cost in ", year, " per neighborhood districts"),
+       x = "Neighborhood Districts",
+       y = "Total Project Cost (dollars)") +
+  # corrects the intervals so they are easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Sets a y-axis interval so that the graphs will be more easily compared to each other 
+  scale_y_continuous(limits = c(0,1.2e+09)))
+}
+# Creates three graphs by using the function for the years 2019 through 2021
+plotProjCostYear(2019)
+plotProjCostYear(2020)
+plotProjCostYear(2021)
+```
+
+The first way that we explored the change in price due to the pandemic was by looking at the total project costs in 2019 through 2021 for each neighborhood. For most neighborhood districts, there was a decrease in total cost from 2019 to 2020 and then an increase in total cost from 2020 to 2021. These results were very similar to the total estimated price costs from the line graph above, first a decrease going into 2020 and then an increase leaving 2020. For example if we look at the east neighborhood district, their total cost was around $\$500,000,000$ in 2019, $\$250,000,000$ in 2020, and almost back up to $\$500,000,000$ in 2021. Now we are starting to see a trend in these estimated project costs. We are starting to see that when the pandemic started, the costs for building projects started to go down, then after a while they went back up again. One hypothesis is that this change in price is due to shut downs and a lack of employees. We know that when the pandemic started, there were times when we could not work and times when people stopped showing up to work. This may have led to less projects being built and leading to an overall lower total and average costs.
+
+```{r second_bar_graph, echo = FALSE, eval = TRUE}
+# Creates a function that will return a bar graph based on year
+plotPermitClassYear = function(year) {
+  # filters the data for the type of permit based on year
+  permClassYear <- permit %>% filter(IssuedYear == year)
+  # returns a graph of permit class based on neighborhood district
+  return(ggplot(permClassYear, aes(x = NeighborhoodDistrict, fill = PermitClass)) + 
+  # Creates a bar graph
+  geom_bar() +
+  # If we wanted to use a pie chart instead we could add this line of code
+  # (Tanner and Andy agree that pie charts are awesome)
+  # coord_polar()+
+  # Fixes the intervals so they are easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Set limit for y-axis
+  ylim(c(0,900)) +
+  # Creates labels for the graph
+  labs(title = paste0("The amount of different permit class by neighberhood District   in ", year)))
+}
+# Creates three bar charts for 2019 through 2021 using the function
+plotPermitClassYear(2019)
+plotPermitClassYear(2020)
+plotPermitClassYear(2021)
+```
+
+After we started to see a trend in how COVID-19 was affecting the estimated price costs, we wanted to move on and analyze permit classes. The first thing we looked at related to permit classes was how many different types and how many different permit classes there were in each neighborhood district. When comparing these results for 2019 through 2021, we can see a decline in the total amount of permits from 2019 to 2020. For example if we look at the east neighborhood district again, there were around 625 total permits in 2019, a bit less than 500 permits in 2020, and close to 300 permits in 2021. While there are a few exceptions to this trend, majority of the data follow this trend of decline in total permits. Another take away from these graphs in the proportion of types of permits. We can see that in majority of the neighborhood districts, there is a large proportion of single family/duplex permits, but in neighborhood districts like Lake Union or Downtown there is a large portion of commercial permits. This helps explain some of our earlier graphs as well. For example we see in our second bar graph that downtown has a very low total number of permits, however in our first bar graph we see that downtown has one of the highest total estimated building costs. This can be explained by the fact that commercial permits may be much more expensive than other permit classes.
+
+```{r box_plot, echo = FALSE, eval = TRUE}
+# Creates a plot for estimated project costs based on permit class.
+ggplot(permit, aes(x = PermitClass, y = EstProjectCost)) +
+  # creates a boxplot
+  geom_boxplot(fill = "lightgreen", na.rm = TRUE) +
+  # Created labels for the boxplot
+  labs(title = "Estimated project cost based on permit class",
+       x = "Permit Class", y = "Estimated Project Cost (dollars)")
+# creating the same exact box plot, only zooming in on the lower part of the plot so it can be read easier
+ggplot(permit, aes(x = PermitClass, y = EstProjectCost)) +
+  geom_boxplot(fill = "lightgreen", na.rm = TRUE) +
+  ylim(c(0,1e+05)) +
+  labs(title = "Estimated project cost based on permit class (Zoomed in version)",
+       x = "Permit Class", y = "Estimated Project Cost (dollars)")
+```
+
+After learning about the different types of permit classes, we wanted to relate these permits back to our original focus, the estimated project costs. We made a box plot of these permit classes compared to estimated project cost, but the result box plot was too small to read. We can see some permit classes like commercial, industrial, and institutional can be more expensive, but we cannot see medians, first quartile, and third quartile. We when graph it again and set a limit on the y-axis so that we can now see the majority of the data in the box plot. This second box plot shows us that all the median prices for each permit class are very similar, they are all around $\$25,000$. This means that while permit classes are used for different types of buildings, the prices are usually similar. However, for some permit classes like commercial, industrial, and institutional, they can be much more expensive. 
+
+```{r third_bar_graph, echo = FALSE, eval = TRUE}
+# creates a new subset of data grouping permits classes and calculating the average cost based on type of permit
+projCostClass <- permit %>%
+  group_by(PermitClass) %>%
+  summarise(AveCost = mean(EstProjectCost, na.rm = TRUE), totalCost = sum(EstProjectCost, na.rm = TRUE))
+# Creates a graph for average cost based on permit class
+ggplot(projCostClass, aes(x = PermitClass, y = AveCost)) +
+  # Creates a bar graph
+  geom_bar(stat = "identity") + 
+  # Makes axis intervals easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Adds labels to the bar graph
+  labs(title = "Average project cost based on permit class",
+       x = "Permit Class", y = "Average Project Cost (dollars)")
+```
+
+Now that we know that some permit classes are more expensive than others, we wanted to investigate which permit class was the most expensive to use. To do this we created a bar graph of the average project cost based on permit class. Just like we suspected in our previous graph, we can now see that commercial, industrial, and institutional permit classes have much higher average building costs than other permit classes like multifamily and single family/duplex. This further proves our theory that some areas like downtown have a higher total building cost because they use more expensive permits like commercial, industrial, or institutional. Specifically, we can see that the institutional permit class has the highest average building cost. If we look back at our second bar graph, we can see that the neighborhood districts with the highest total estimated building costs (Northwest and Northeast) also have the highest amount of institutional permits.
+
+# Conclusion
+In researching the building permits from the City of Seattle, we can conclude that the COVID-19 pandemic did in fact alter the price for building projects. We can see that at the beginning of the pandemic, both the total and average costs of building projects went down. After a year, these costs started to rise again. We can see that this increase in cost affect people on the neighborhood level, where each neighborhood experienced less projects being built. Additionally, these increased prices affected permit classes, where different permits were used less. Overall, many different things like estimated price cost and permit class were affected by the pandemic. These changes can be seen at the neighborhood district level. We learned that building projects in the city of Seattle can be very expensive. These costs vary from year to year and can be affected by certain conditions like the COVID-19 pandemic. We also learned that not every area of Seattle is the same. Many different neighborhood districts have different budgets and were affected differently when faced with the pandemic.
+
+# Code Appendix
+
+## Read in the data
+```{r read_in_data_present, echo = TRUE, eval = FALSE}
+# downloading the data
+permit <- read.csv("https://raw.githubusercontent.com/svteichman/STAT302-SPR2022/main/files/projects/01_data-visualization/Building_Permits_Clean.csv")
+```
+
+## Loading data and attaching packages
+```{r load_packages_present, echo = TRUE, eval = FALSE, message = FALSE}
+# attach tidyverse packages 
+library(tidyverse)
+```
+
+## Histogram
+```{r histogram_present, echo = TRUE, eval = FALSE}
+# Creating a plot with log of the estimated price costs on the x axis
+ggplot(permit, aes(x = log(EstProjectCost))) +
+  # Creating a histogram with bins of 40
+  geom_histogram(bins = 40) +
+  # Creating a labels for the histogram
+  labs(title = "Estimated Project Costs (log)",
+       x = "Estimated Price Costs")
+```
+
+## Line Graaph
+```{r line_graph_present, echo = TRUE, eval = FALSE}
+# Creating a subset of data that groups by neighborhood district and issued year
+# Takes a sum of all the estimated project costs of a given neighborhood and year
+projCost <- permit %>%
+  group_by(NeighborhoodDistrict, IssuedYear) %>%
+  summarise(AveCost = mean(EstProjectCost, na.rm = TRUE), totalCost = sum(EstProjectCost, na.rm = TRUE))
+projCost$NeighborhoodDistrict <- as.factor(projCost$NeighborhoodDistrict)
+# Creates a graph for the average costs grouped by neighborhood compared to the issued year
+ggplot(data = projCost, aes(x = IssuedYear, y = AveCost, group = NeighborhoodDistrict, color = NeighborhoodDistrict)) + 
+  # Creates a line graph
+  geom_line(size = 0.5) + 
+  # Creates the labels for the graph
+  labs(title = "Estimated project cost by year per neighborhood district",
+       x = "Year Issued",
+       y = "Average Estimated Project Cost")
+
+```
+
+## First Bar Graph
+```{r first_bar_graph_present, echo = TRUE, eval = FALSE}
+# Creates a function that will return a bar chart given an input of any year
+plotProjCostYear <- function(year) {
+  # Filters the data for the given year
+  projCostYear <- projCost %>% filter(IssuedYear == year)
+  # Returns a plot of the total costs based on neighborhoods
+  return(ggplot(data = projCostYear, aes(x = NeighborhoodDistrict, y = totalCost)) +
+  # Creates a bar graph
+  geom_bar(stat = "identity") + 
+  geom_smooth(formula = y ~ x,
+              se = FALSE, size = 2, color = "red", method = "loess") +
+  # creates labels for the graph
+  labs(title = paste0("Total project cost in ", year, " per neighborhood districts"),
+       x = "Neighborhood Districts",
+       y = "Total Project Cost (dollars)") +
+  # corrects the intervals so they are easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Sets a y-axis interval so that the graphs will be more easily compared to          each other 
+  scale_y_continuous(limits = c(0,1.2e+09)))
+}
+# Creates three graphs by using the function for the years 2019 through 2021
+plotProjCostYear(2019)
+plotProjCostYear(2020)
+plotProjCostYear(2021)
+```
+
+## Seocnd Bar Graph
+```{r second_bar_graph_present, echo = TRUE, eval = FALSE}
+# Creates a function that will return a bar graph based on year
+plotPermitClassYear = function(year) {
+  # filters the data for the type of permit based on year
+  permClassYear <- permit %>% filter(IssuedYear == year)
+  # returns a graph of permit class based on neighborhood district
+  return(ggplot(permClassYear, aes(x = NeighborhoodDistrict, fill = PermitClass)) + 
+  # Creates a bar graph
+  geom_bar() +
+  # If we wanted to use a pie chart instead we could add this line of code
+  # (Tanner and Andy agree that pie charts are awesome)
+  # coord_polar()+
+  # Fixes the intervals so they are easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Set limit for y-axis
+  ylim(c(0,900)) +
+  # Creates labels for the graph
+  labs(title = paste0("The amount of different permit class by neighberhood District   in ", year)))
+}
+# Creates three bar charts for 2019 through 2021 using the function
+plotPermitClassYear(2019)
+plotPermitClassYear(2020)
+plotPermitClassYear(2021)
+```
+
+## Box Plot
+```{r box_plot_present, echo = TRUE, eval = FALSE}
+# Creates a plot for estimated project costs based on permit class.
+ggplot(permit, aes(x = PermitClass, y = EstProjectCost)) +
+  # creates a boxplot
+  geom_boxplot(fill = "lightgreen", na.rm = TRUE) +
+  # Created labels for the boxplot
+  labs(title = "Estimated project cost based on permit class",
+       x = "Permit Class", y = "Estimated Project Cost (dollars)")
+# creating the same exact box plot, only zooming in on the lower part of the plot so it can be read easier
+ggplot(permit, aes(x = PermitClass, y = EstProjectCost)) +
+  geom_boxplot(fill = "lightgreen", na.rm = TRUE) +
+  ylim(c(0,1e+05)) +
+  labs(title = "Estimated project cost based on permit class (Zoomed in version)",
+       x = "Permit Class", y = "Estimated Project Cost (dollars)")
+```
+
+## Third Bar Graph
+```{r third_bar_graph_present, echo = TRUE, eval = FALSE}
+# creates a new subset of data grouping permits classes and calculating the average cost based on type of permit
+projCostClass <- permit %>%
+  group_by(PermitClass) %>%
+  summarise(AveCost = mean(EstProjectCost, na.rm = TRUE), totalCost = sum(EstProjectCost, na.rm = TRUE))
+# Creates a graph for average cost based on permit class
+ggplot(projCostClass, aes(x = PermitClass, y = AveCost)) +
+  # Creates a bar graph
+  geom_bar(stat = "identity") + 
+  # Makes axis intervals easier to read
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  # Adds labels to the bar graph
+  labs(title = "Average project cost based on permit class",
+       x = "Permit Class", y = "Average Project Cost (dollars)")
+```
+

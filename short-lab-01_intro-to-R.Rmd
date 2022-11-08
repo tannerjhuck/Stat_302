@@ -1,0 +1,127 @@
+---
+title: "Short Lab 1"
+author: "Tanner Huck"
+date: "4/4/2022"
+output: html_document
+---
+
+<!--- Begin styling code. --->
+<style type="text/css">
+/* Whole document: */
+body{
+  font-size: 12pt;
+}
+h1.title {
+  font-size: 38px;
+  text-align: center;
+}
+h4.author {
+  font-size: 18px;
+  text-align: center;
+}
+h4.date {
+  font-size: 18px;
+  text-align: center;
+}
+</style>
+<!--- End styling code. --->
+
+You should edit this .Rmd using RStudio, then click *Knit* in the menu bar of the Source window (above the text of this .Rmd).
+Remember, you must submit *both* your .Rmd and the compiled .html in order to receive full credit!
+
+### Collaborators
+
+Xiangyi Wen
+
+## Part 1. Some group work
+
+Work with one or two other students, 
+
+**1.** In words, what does the following line of code do? 
+
+```{r, eval = T}
+sample(1:6, 1)
+```
+
+It will give you a random element from the vector 1,2,3,4,5,6. Different each time.
+
+**2.** Run the line of code in RStudio. What do you get? What did your groupmates get? What happens to the result each time you knit the document?
+
+The first 4 times I ran the code I got 5,3,2,3 and my partner got the same thing. So I think it is supposed to be random, but it follows some kind of algorithm. 
+
+**3.** Below, we introduce the ```set.seed``` function. What do the two lines of code below do? What happens to the result each time you knit the document?        
+
+```{r, eval = T}
+set.seed(456)
+sample(1:6, 1)
+```
+
+Each time you run it you get 5. I think the seed is selecting one of the random algorithms. This way it is choosing the same random value each time.
+
+What if you set a different seed? 
+
+```{r, eval = T}
+set.seed(7)
+sample(1:6, 1)
+```
+
+With a seed of 7, I now get 2 each time instead of 5. Maybe this is because it is choosing a different random algorithm.
+
+**4.** We can also use in-line R code in R Markdown to ensure that we don't have to edit our text each time we knit our file. Edit the text below using in-line code to print out your value of ```x```.
+
+```{r, eval = T}
+x <- sample(1:6, 1)
+```
+
+The value of ```x``` that I obtained is `r x`.
+
+## Part 2. Vectors and marices
+
+**5.** Choose a seed and replace the seed used in the code below. Using the code below, we can simulate a vector of Uniform(0,1) random variables and two additional random variables ```y``` and ```z```. What is the difference between ```y``` and ```z```?
+
+```{r, eval = T}
+set.seed(7)
+x <- runif(2000)
+y <- mean(x < .5)
+z <- mean(x)
+```
+
+x is a vector with 2000 elements of random deviates of the uniform distribution. y will take the average of all the elements in the vector less than 0.5 and z will take the average of all 2000 elements.
+
+**6.** Construct a 3 by 3 matrix with 1s on the main diagonal and 3s in all other entries. Print the resulting matrix.
+
+```{r, eval = T}
+my_matrix <- matrix(c(1,3,3,3,1,3,3,3,1), nrow = 3, ncol = 3)
+my_matrix
+```
+
+## Part 3. Some real data
+
+**7.** First, run ```install.packages("moderndive")``` and then the following code. This loads the ```house_prices``` dataset, which contains house sale data for King Country. What time period are these house prices from?
+
+```{r}
+library(moderndive)
+data("house_prices")
+a <- min(house_prices$date)
+b <- max(house_prices$date)
+```
+
+The starting date is `r a` and the ending date is `r b`
+
+
+**8.** The ```house_prices$bedrooms``` vector contains information on the number of bedrooms in each house. What is the median value? What is the mean value? 
+
+```{r}
+c <- median(house_prices$bedrooms)
+d <- mean(house_prices$bedrooms)
+```
+
+The median number of bedrooms is `r c` and the mean is about `r d`
+
+**9.** (Optional) The ```house_prices$bedrooms``` vector contains information on the number of bedrooms in each house. What is the maximum value? Is this realistic? Can you figure out what happened here?
+
+```{r}
+e <- max(house_prices$bedrooms)
+```
+
+The maximum number of bedrooms is `r e` which is unrealistic. It might be an outlier or maybe that person had too much money.
